@@ -1,0 +1,193 @@
+name: Build and Release Executables
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version tag (e.g., v1.0.0)'
+        required: true
+        default: 'v1.0.0'
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.9'
+    
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install pyinstaller
+    
+    - name: Build Windows executable
+      run: python build_executable.py --platform windows --clean
+    
+    - name: Upload Windows artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: gallery-dl-gui-windows
+        path: dist/*
+        retention-days: 30
+
+  build-linux:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.9'
+    
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install pyinstaller
+    
+    - name: Build Linux executable
+      run: python build_executable.py --platform linux --clean
+    
+    - name: Upload Linux artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: gallery-dl-gui-linux
+        path: dist/*
+        retention-days: 30
+
+  build-macos:
+    runs-on: macos-latest
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.9'
+    
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install pyinstaller
+    
+    - name: Build macOS executable
+      run: python build_executable.py --platform macos --clean
+    
+    - name: Create macOS app bundle
+      run: |
+        if [ -d "dist/Gallery-DL-GUI-Macos.app" ]; then
+          cd dist
+          zip -r Gallery-DL-GUI-macOS.app.zip Gallery-DL-GUI-Macos.app/
+        fi
+    
+    - name: Upload macOS artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: gallery-dl-gui-macos
+        path: dist/*.zip
+        retention-days: 30
+
+  release:
+    needs: [build-windows, build-linux, build-macos]
+    runs-on: ubuntu-latest
+    if: github.event_name == 'release'
+    
+    steps:
+    - name: Download Windows artifact
+      uses: actions/download-artifact@v3
+      with:
+        name: gallery-dl-gui-windows
+        path: ./windows
+    
+    - name: Download Linux artifact
+      uses: actions/download-artifact@v3
+      with:
+        name: gallery-dl-gui-linux
+        path: ./linux
+    
+    - name: Download macOS artifact
+      uses: actions/download-artifact@v3
+      with:
+        name: gallery-dl-gui-macos
+        path: ./macos
+    
+    - name: Rename files for release
+      run: |
+        # Rename files with proper version
+        VERSION="${{ github.event.release.tag_name }}"
+        
+        # Windows
+        if [ -f "./windows/Gallery-DL-GUI-Windows.exe" ]; then
+          mv "./windows/Gallery-DL-GUI-Windows.exe" "./Gallery-DL-GUI-${VERSION}-Windows-x64.exe"
+        fi
+        
+        # Linux
+        if [ -f "./linux/Gallery-DL-GUI-Linux" ]; then
+          mv "./linux/Gallery-DL-GUI-Linux" "./Gallery-DL-GUI-${VERSION}-Linux-x64"
+          chmod +x "./Gallery-DL-GUI-${VERSION}-Linux-x64"
+        fi
+        
+        # macOS
+        if [ -f "./macos/Gallery-DL-GUI-macOS.app.zip" ]; then
+          mv "./macos/Gallery-DL-GUI-macOS.app.zip" "./Gallery-DL-GUI-${VERSION}-macOS-x64.app.zip"
+        fi
+        
+        # List files for verification
+        ls -la
+    
+    - name: Upload release assets
+      uses: softprops/action-gh-release@v1
+      with:
+        files: |
+          Gallery-DL-GUI-*-Windows-x64.exe
+          Gallery-DL-GUI-*-Linux-x64
+          Gallery-DL-GUI-*-macOS-x64.app.zip
+        body: |
+          ## Gallery-DL GUI ${{ github.event.release.tag_name }}
+          
+          Standalone executables for all major platforms. No Python installation required!
+          
+          ### Downloads
+          - **Windows**: `Gallery-DL-GUI-${{ github.event.release.tag_name }}-Windows-x64.exe`
+          - **Linux**: `Gallery-DL-GUI-${{ github.event.release.tag_name }}-Linux-x64` 
+          - **macOS**: `Gallery-DL-GUI-${{ github.event.release.tag_name }}-macOS-x64.app.zip`
+          
+          ### Usage Instructions
+          
+          **Windows:**
+          1. Download the `.exe` file
+          2. Double-click to run (may show security warning on first run)
+          
+          **Linux:**
+          1. Download the executable file
+          2. Make it executable: `chmod +x Gallery-DL-GUI-*-Linux-x64`
+          3. Run: `./Gallery-DL-GUI-*-Linux-x64`
+          
+          **macOS:**
+          1. Download and extract the `.zip` file
+          2. Double-click the `.app` file to run
+          3. If blocked by security, right-click → Open
+          
+          ### Features
+          - Download images/galleries from 300+ websites
+          - No Python or gallery-dl installation required
+          - Standalone executable with all dependencies included
+          - Cross-platform compatibility
+          
+          ### File Sizes
+          - Windows: ~50-80 MB
+          - Linux: ~45-70 MB  
+          - macOS: ~55-85 MB
+          
+          **Note**: Large file sizes are normal for standalone executables as they include the Python runtime and all dependencies.
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
