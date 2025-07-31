@@ -34,8 +34,9 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: gallery-dl-gui-windows
-        path: dist/*
+        path: dist/
         retention-days: 30
+        if-no-files-found: error
 
   build-linux:
     runs-on: ubuntu-latest
@@ -60,8 +61,9 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: gallery-dl-gui-linux
-        path: dist/*
+        path: dist/
         retention-days: 30
+        if-no-files-found: error
 
   build-macos:
     runs-on: macos-latest
@@ -93,8 +95,9 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: gallery-dl-gui-macos
-        path: dist/*.zip
+        path: dist/
         retention-days: 30
+        if-no-files-found: error
 
   release:
     needs: [build-windows, build-linux, build-macos]
@@ -125,20 +128,31 @@ jobs:
         # Rename files with proper version
         VERSION="${{ github.event.release.tag_name }}"
         
-        # Windows
+        # Windows - look for .exe files
         if [ -f "./windows/Gallery-DL-GUI-Windows.exe" ]; then
           mv "./windows/Gallery-DL-GUI-Windows.exe" "./Gallery-DL-GUI-${VERSION}-Windows-x64.exe"
+        elif [ -f "./windows/"*.exe ]; then
+          mv "./windows/"*.exe "./Gallery-DL-GUI-${VERSION}-Windows-x64.exe"
         fi
         
-        # Linux
+        # Linux - look for executable files
         if [ -f "./linux/Gallery-DL-GUI-Linux" ]; then
           mv "./linux/Gallery-DL-GUI-Linux" "./Gallery-DL-GUI-${VERSION}-Linux-x64"
           chmod +x "./Gallery-DL-GUI-${VERSION}-Linux-x64"
+        elif [ -f "./linux/Gallery-DL-GUI-"* ]; then
+          mv "./linux/Gallery-DL-GUI-"* "./Gallery-DL-GUI-${VERSION}-Linux-x64"
+          chmod +x "./Gallery-DL-GUI-${VERSION}-Linux-x64"
         fi
         
-        # macOS
+        # macOS - look for .app or .zip files  
         if [ -f "./macos/Gallery-DL-GUI-macOS.app.zip" ]; then
           mv "./macos/Gallery-DL-GUI-macOS.app.zip" "./Gallery-DL-GUI-${VERSION}-macOS-x64.app.zip"
+        elif [ -f "./macos/"*.zip ]; then
+          mv "./macos/"*.zip "./Gallery-DL-GUI-${VERSION}-macOS-x64.app.zip"
+        elif [ -d "./macos/"*.app ]; then
+          cd ./macos
+          zip -r "../Gallery-DL-GUI-${VERSION}-macOS-x64.app.zip" *.app/
+          cd ..
         fi
         
         # List files for verification
