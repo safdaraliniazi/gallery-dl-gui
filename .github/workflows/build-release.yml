@@ -31,7 +31,7 @@ jobs:
       run: python build_executable.py --platform windows --clean
     
     - name: Upload Windows artifact
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: gallery-dl-gui-windows
         path: dist/*
@@ -57,7 +57,7 @@ jobs:
       run: python build_executable.py --platform linux --clean
     
     - name: Upload Linux artifact
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: gallery-dl-gui-linux
         path: dist/*
@@ -90,7 +90,7 @@ jobs:
         fi
     
     - name: Upload macOS artifact
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: gallery-dl-gui-macos
         path: dist/*.zip
@@ -103,19 +103,19 @@ jobs:
     
     steps:
     - name: Download Windows artifact
-      uses: actions/download-artifact@v3
+      uses: actions/download-artifact@v4
       with:
         name: gallery-dl-gui-windows
         path: ./windows
     
     - name: Download Linux artifact
-      uses: actions/download-artifact@v3
+      uses: actions/download-artifact@v4
       with:
         name: gallery-dl-gui-linux
         path: ./linux
     
     - name: Download macOS artifact
-      uses: actions/download-artifact@v3
+      uses: actions/download-artifact@v4
       with:
         name: gallery-dl-gui-macos
         path: ./macos
