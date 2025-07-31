@@ -29,6 +29,9 @@ $PYTHON_CMD -m pip install -r requirements.txt
 $PYTHON_CMD -m pip install pyinstaller
 
 # Add local bin to PATH for PyInstaller
+export PATH=$PATH:$HOME/.local/bin
+
+# Add local bin to PATH for PyInstaller
 export PATH="$HOME/.local/bin:$PATH"
 
 # Detect platform
