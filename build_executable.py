@@ -63,11 +63,11 @@ class ExecutableBuilder:
         # Check if PyInstaller is installed
         try:
             import PyInstaller
-            print(f"✓ PyInstaller {PyInstaller.__version__} found")
+            print(f"[OK] PyInstaller {PyInstaller.__version__} found")
         except ImportError:
-            print("✗ PyInstaller not found. Installing...")
+            print("[INFO] PyInstaller not found. Installing...")
             subprocess.check_call([sys.executable, "-m", "pip", "install", "pyinstaller"])
-            print("✓ PyInstaller installed")
+            print("[OK] PyInstaller installed")
         
         # Check if main script exists
         if not (self.script_dir / self.main_script).exists():
@@ -79,7 +79,7 @@ class ExecutableBuilder:
             if not (self.script_dir / dir_name).exists():
                 raise FileNotFoundError(f"Required directory {dir_name} not found")
         
-        print("✓ All requirements satisfied")
+        print("[OK] All requirements satisfied")
     
     def _get_pyinstaller_args(self, target_platform, console=False, custom_name=None, debug=False):
         """Generate PyInstaller arguments."""
@@ -178,12 +178,12 @@ class ExecutableBuilder:
             dir_path = self.script_dir / dir_name
             if dir_path.exists():
                 shutil.rmtree(dir_path)
-                print(f"✓ Removed {dir_name}/")
+                print(f"[OK] Removed {dir_name}/")
         
         # Clean spec files
         for spec_file in self.script_dir.glob("*.spec"):
             spec_file.unlink()
-            print(f"✓ Removed {spec_file.name}")
+            print(f"[OK] Removed {spec_file.name}")
     
     def build(self, target_platform=None, console=False, custom_name=None, clean=False, debug=False):
         """Build the executable."""
@@ -212,7 +212,7 @@ class ExecutableBuilder:
             result = subprocess.run(args, capture_output=True, text=True)
             
             if result.returncode == 0:
-                print("✓ Build completed successfully!")
+                print("[OK] Build completed successfully!")
                 
                 # Find the executable
                 dist_dir = self.script_dir / "dist"
@@ -221,17 +221,17 @@ class ExecutableBuilder:
                     if executables:
                         exe_path = executables[0]
                         exe_size = exe_path.stat().st_size / (1024 * 1024)  # MB
-                        print(f"✓ Executable created: {exe_path}")
-                        print(f"✓ File size: {exe_size:.1f} MB")
+                        print(f"[OK] Executable created: {exe_path}")
+                        print(f"[OK] File size: {exe_size:.1f} MB")
                         
                         # Show platform-specific instructions
                         self._show_usage_instructions(exe_path, target_platform)
                     else:
-                        print("⚠ Build completed but no executable found in dist/")
+                        print("[WARNING] Build completed but no executable found in dist/")
                 else:
-                    print("⚠ Build completed but dist/ directory not found")
+                    print("[WARNING] Build completed but dist/ directory not found")
             else:
-                print("✗ Build failed!")
+                print("[ERROR] Build failed!")
                 print("STDOUT:", result.stdout)
                 print("STDERR:", result.stderr)
                 return False
@@ -332,7 +332,7 @@ def main():
         return 0 if success else 1
         
     except Exception as e:
-        print(f"✗ Build failed: {e}")
+        print(f"[ERROR] Build failed: {e}")
         if args.debug:
             import traceback
             traceback.print_exc()

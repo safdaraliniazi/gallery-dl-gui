@@ -29,6 +29,8 @@ jobs:
     
     - name: Build Windows executable
       run: python build_executable.py --platform windows --clean
+      env:
+        PYTHONIOENCODING: utf-8
     
     - name: Upload Windows artifact
       uses: actions/upload-artifact@v4
@@ -56,6 +58,8 @@ jobs:
     
     - name: Build Linux executable
       run: python build_executable.py --platform linux --clean
+      env:
+        PYTHONIOENCODING: utf-8
     
     - name: Upload Linux artifact
       uses: actions/upload-artifact@v4
@@ -83,6 +87,8 @@ jobs:
     
     - name: Build macOS executable
       run: python build_executable.py --platform macos --clean
+      env:
+        PYTHONIOENCODING: utf-8
     
     - name: Create macOS app bundle
       run: |
